@@ -36,6 +36,16 @@ function * getPosts(dom) {
   }
 }
 
+// TODO: set this up like the slime quest demo from nycki.net
+function writeHtml({ imgSrc, desc }) {
+  return `
+    <div class="post">
+      <img src="${imgSrc}" height=10em>
+      <p>${desc}</p>
+    </div>
+  `;
+}
+
 async function main() {
   await saveHtml();
 
