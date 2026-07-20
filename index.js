@@ -1,7 +1,6 @@
 const fs = require('node:fs/promises');
 const { Readable } = require('node:stream');
-
-
+const jsdom = require('jsdom');
 
 async function saveHtml() {
   try {
@@ -18,8 +17,35 @@ async function saveHtml() {
   }
 }
 
+function getCoverPage(dom) {
+  const form = dom.window.document.querySelector('#delform');
+  const imgSrc = form.querySelector('a:has(img)').getAttribute('href');
+  const title = form.querySelector('.filetitle').textContent.trim();
+  const author = form.querySelector('.postername').textContent.trim();
+  const desc = form.querySelector('blockquote').textContent.trim();
+  return { imgSrc, title, author, desc };
+}
+
+function * getPosts(dom) {
+  yield getCoverPage(dom);
+  for (const el of dom.window.document.querySelectorAll('.reply')) {
+    const imgLink = el.querySelector('a:has(img)');
+    const imgSrc = imgLink && imgLink.getAttribute('href');
+    const desc = el.querySelector('blockquote').textContent.trim();
+    yield { imgSrc, desc };
+  }
+}
+
 async function main() {
   await saveHtml();
+
+  const dom = await jsdom.JSDOM.fromFile('_tmp/quest.html');
+
+  for (const p of getPosts(dom)) {
+    if (!p.imgSrc) continue;
+    console.log(p.imgSrc);
+    console.log(p.desc);
+  }
   
   console.log('ok.');
   process.exit(0);
