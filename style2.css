@@ -8,6 +8,7 @@ html {
 }
 
 body {
+  color: var(--title-text);
   background: var(--body-bg);
   max-width: 40em;
   margin: 1em auto;
@@ -17,7 +18,6 @@ body {
   display:block;
   width: 100%;
   text-align: center;
-  color: var(--title-text);
   font-size: xx-large;
   font-weight: bold;
 }
@@ -82,4 +82,9 @@ nav li {
 }
 nav li + li::before {
 	content: ' | ';
+}
+
+/* temporarily make post breaks visible */
+.post-break {
+  border-bottom: thick dashed;
 }

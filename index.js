@@ -77,9 +77,22 @@ async function fetchQuest2(path, uri) {
 
   // extract image replies
   const replies = oldDoc.querySelectorAll('.reply');
+  let breakAdded = true;
   for (const reply of replies) {
     const imgLink = reply.querySelector('a:has(img)')?.getAttribute('href');
-    if (!imgLink) continue;
+
+    // add a marker when an image post follows a non-image post.
+    if (!imgLink) {
+      breakAdded = false;
+      continue;
+    }
+    if (!breakAdded) {
+      const breakDiv = doc.createElement('div');
+      breakDiv.classList.add('post-break');
+      doc.body.appendChild(breakDiv);
+      breakAdded = true;
+    }
+    
     const imgName = imgLink.split('/').at(-1);
     pending.push(fetchImage(`${path}/res/${imgName}`, `https://questden.org${imgLink}`));
 
