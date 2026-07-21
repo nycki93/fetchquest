@@ -18,3 +18,4 @@ npm run fetchquest
 - [ ] override: "manual break" in the middle of a chain, in case you don't want images to be consolidated into one post
 - [ ] override: "skip", in case there's an image that isn't part of your story
 - [ ] oh heck questden has spoiler markup? add support for that too.
+- [ ] install a dev server so you can test out the navigation while working on this
