@@ -19,17 +19,13 @@ async function download(path, uri) {
   await fs.writeFile(path, res.body);
 }
 
-async function fetchQuest(path, uri) {
-  // download images as needed
-  await fs.mkdir(`${path}/res/`, { recursive: true });
-  const pending = [];
-
+async function fetchQuest(dir, uri, title=null) {
+  let path = `${dir}/${title ?? '_tmp'}`;
   let oldDom;
   if (await fileExists(`${path}/index-original.html`)) {
     oldDom = await JSDOM.fromFile(`${path}/index-original.html`);
   } else {
     oldDom = await JSDOM.fromURL(uri);
-    await fs.writeFile(`${path}/index-original.html`, oldDom.serialize());
   }
   const oldDoc = oldDom.window.document;
   const dom = new JSDOM(`
@@ -39,20 +35,36 @@ async function fetchQuest(path, uri) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>quest</title>
-    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="style.css">
     </head>
     <body></body>
     </html>
   `);
-  const doc = dom.window.document;
 
-  // extract cover
-  const cover = doc.createElement('div');
-  doc.body.appendChild(oldDoc.querySelector('#delform .filetitle'));
+  const doc = dom.window.document;
+  const titleEl = oldDoc.querySelector('#delform .filetitle');
   // TODO: style author's name as subtitle
   // doc.body.appendChild(oldDoc.querySelector('#delform .postername'));
-  cover.classList.add('post', 'cover');
+  doc.body.appendChild(titleEl);
+
+  // move to output folder if none specified
+  if (!title) {
+    title = titleEl.textContent.trim();
+    const newPath = `${dir}/${title}`;
+    await fs.mkdir(newPath, { recursive: true });
+    path = newPath;
+  }
+  if (!await fileExists(`${path}/index-original.html`)) {
+    await fs.writeFile(`${path}/index-original.html`, oldDom.serialize());
+  }
+
+  // download images as needed
+  await fs.mkdir(`${path}/res/`, { recursive: true });
+  const pending = [];
+  pending.push(fs.copyFile('style.css', `${path}/style.css`));
   
+  const cover = doc.createElement('div');
+  cover.classList.add('post', 'cover');
   const coverImgLink = oldDoc.querySelector('#delform a:has(img)').getAttribute('href');
   const coverImgName = coverImgLink.split('/').at(-1);
   pending.push(download(`${path}/res/${coverImgName}`, `https://questden.org${coverImgLink}`));

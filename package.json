@@ -5,14 +5,16 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "fetchquest": "node index.js"
+    "fetchquest": "node index.js",
+    "serve": "serve _out"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "jsdom": "^29.1.1"
+    "jsdom": "^29.1.1",
+    "serve": "^14.2.6"
   },
   "devDependencies": {
     "@types/jsdom": "^28.0.3"
