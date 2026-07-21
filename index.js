@@ -57,6 +57,7 @@ async function fetchQuest2(path, uri) {
   // extract cover
   const cover = doc.createElement('div');
   doc.body.appendChild(oldDoc.querySelector('#delform .filetitle'));
+  // TODO: style author's name as subtitle
   // doc.body.appendChild(oldDoc.querySelector('#delform .postername'));
   cover.classList.add('post', 'cover');
   
