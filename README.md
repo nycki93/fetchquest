@@ -1,4 +1,4 @@
-# quest-to-mspa
+# fetchquest
 
 a questden archiver for your static website
 

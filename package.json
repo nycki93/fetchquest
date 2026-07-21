@@ -1,5 +1,5 @@
 {
-  "name": "quest-to-mspa",
+  "name": "fetchquest",
   "version": "1.0.0",
   "description": "a questden archiver for your static website",
   "main": "index.js",
