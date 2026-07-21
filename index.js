@@ -100,7 +100,7 @@ async function main() {
   const dom = await jsdom.JSDOM.fromFile('_tmp/quest.html');
 
   let questTitle = '';
-  const imagePosts = Array.from(getPosts(dom)).filter(p => p.imgSrc).slice(0, 10);
+  const imagePosts = Array.from(getPosts(dom)).filter(p => p.imgSrc);
   await fetchImages('_out', imagePosts);
 
   for (let i = 0; i < imagePosts.length; i += 1) {
