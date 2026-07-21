@@ -2,6 +2,10 @@
 
 a questden archiver for your static website
 
+## usage
+
+npm run fetchquest
+
 ## todo
 
 - [x] import css from last time I did this
