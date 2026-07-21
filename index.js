@@ -1,6 +1,6 @@
 const fs = require('node:fs/promises');
 const { Readable } = require('node:stream');
-const jsdom = require('jsdom');
+const { JSDOM } = require('jsdom');
 
 async function fileExists(path) {
   try {
@@ -19,6 +19,20 @@ async function fetchQuest(path, uri) {
     const res = await fetch(uri);
     await fs.writeFile(path, Readable.fromWeb(res.body));
   }
+}
+
+async function fetchQuest2(path, uri) {
+  let oldDom;
+  if (await fileExists(`${path}/quest-raw.html`)) {
+    oldDom = await JSDOM.fromFile(`${path}/quest-raw.html`);
+  } else {
+    oldDom = await JSDOM.fromURL(uri);
+    await fs.writeFile(`${path}/quest-raw.html`, oldDom.serialize());
+  }
+  const dom = new JSDOM('<!DOCTYPE html><html lang="en"></html>');
+  const questData = oldDom.window.document.querySelector('#delform');
+  dom.window.document.body.appendChild(questData);
+  await fs.writeFile(`${path}/quest2.html`, dom.serialize());
 }
 
 async function fetchImages(path, posts) {
@@ -97,7 +111,7 @@ async function main() {
   await fs.copyFile('style.css', '_out/style.css');
 
   await fetchQuest('_tmp/quest.html', 'https://questden.org/kusaba/questarch/res/1002454.html');
-  const dom = await jsdom.JSDOM.fromFile('_tmp/quest.html');
+  const dom = await JSDOM.fromFile('_tmp/quest.html');
 
   let questTitle = '';
   const imagePosts = Array.from(getPosts(dom)).filter(p => p.imgSrc);
@@ -120,6 +134,10 @@ async function main() {
 
   console.log('ok.');
   process.exit(0);
+}
+
+async function main2() {
+  await fetchQuest2('_tmp', 'https://questden.org/kusaba/questarch/res/1002454.html');
 }
 
 main();
