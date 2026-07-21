@@ -1,0 +1,24 @@
+/* remove default margin */
+* {
+  margin-top: 0;
+}
+
+/* questden colors */
+body {
+  background: #FFFFEE;
+}
+
+main {
+  background: #F0E0D6;
+  color: #800000;
+  max-width: 40em;
+  margin: 1em auto;
+  padding: 1em;
+}
+
+img {
+  max-width: 100%;
+  height: 30em;
+  display: block;
+  margin: 1em auto;
+}
