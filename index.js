@@ -29,9 +29,52 @@ async function fetchQuest2(path, uri) {
     oldDom = await JSDOM.fromURL(uri);
     await fs.writeFile(`${path}/quest-raw.html`, oldDom.serialize());
   }
-  const dom = new JSDOM('<!DOCTYPE html><html lang="en"></html>');
-  const questData = oldDom.window.document.querySelector('#delform');
-  dom.window.document.body.appendChild(questData);
+  const oldDoc = oldDom.window.document;
+  const dom = new JSDOM(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>quest</title>
+    <link rel="stylesheet" href="../style2.css">
+    </head>
+    <body></body>
+    </html>
+  `);
+  const doc = dom.window.document;
+
+  // extract cover
+  const cover = doc.createElement('div');
+  doc.body.appendChild(oldDoc.querySelector('#delform .filetitle'));
+  // doc.body.appendChild(oldDoc.querySelector('#delform .postername'));
+  cover.classList.add('post', 'cover');
+  const coverImgLink = oldDoc.querySelector('#delform a:has(img)').getAttribute('href');
+  const coverImgName = coverImgLink.split('/').at(-1);
+  const coverImg = doc.createElement('img');
+  coverImg.setAttribute('src', coverImgLink);
+  coverImg.setAttribute('alt', coverImgName);
+  cover.appendChild(coverImg);
+  cover.appendChild(oldDoc.querySelector('#delform blockquote'));
+  doc.body.appendChild(cover);
+
+  // extract image replies
+  const replies = oldDoc.querySelectorAll('.reply');
+  for (const reply of replies) {
+    const imgLink = reply.querySelector('a:has(img)')?.getAttribute('href');
+    if (!imgLink) continue;
+    const imgName = imgLink.split('/').at(-1);
+
+    const post = doc.createElement('div');
+    post.classList.add('post');
+    const img = doc.createElement('img');
+    img.setAttribute('src', imgLink);
+    img.setAttribute('alt', imgName);
+    post.appendChild(img);
+    post.appendChild(reply.querySelector('blockquote'));
+    doc.body.appendChild(post);
+  }
+
   await fs.writeFile(`${path}/quest2.html`, dom.serialize());
 }
 
@@ -137,7 +180,7 @@ async function main() {
 }
 
 async function main2() {
-  await fetchQuest2('_tmp', 'https://questden.org/kusaba/questarch/res/1002454.html');
+  await fetchQuest2('_tmp', 'https://questden.org/kusaba/quest/res/1129477.html');
 }
 
-main();
+main2();
