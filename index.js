@@ -95,6 +95,13 @@ async function fetchQuest2(path, uri) {
     post.appendChild(reply.querySelector('blockquote'));
     doc.body.appendChild(post);
   }
+
+  // remove unnecessary js
+  for (const el of doc.querySelectorAll('.spoiler')) {
+    el.removeAttribute('onmouseover');
+    el.removeAttribute('onmouseout');
+  }
+
   await Promise.all(pending);
   await fs.writeFile(`${path}/quest2.html`, dom.serialize());
 }
