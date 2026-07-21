@@ -84,13 +84,8 @@ async function fetchQuest(dir, uri, title=null) {
   const pending = [];
   pending.push(fs.copyFile('style.css', `${path}/style.css`));
 
-  const { imgUri, imgName, post } = repackPost(doc, oldDoc.querySelector('#delform'));
-  pending.push(download(`${path}/res/${imgName}`, `https://questden.org${imgUri}`));
-  post.classList.add('cover');
-  doc.body.appendChild(post);
-
   // extract image replies
-  const replies = oldDoc.querySelectorAll('.reply');
+  const replies = [oldDoc.querySelector('#delform'), ...oldDoc.querySelectorAll('.reply')];
   let breakAdded = true;
   for (const reply of replies) {
     const { imgUri, imgName, post } = repackPost(doc, reply);
