@@ -46,8 +46,13 @@ function repackPost(doc, el) {
   return { imgUri, imgName, post };
 }
 
-async function fetchQuest(dir, uri, title=null) {
-  let path = `${dir}/${title ?? '_tmp'}`;
+/** 
+ * @param {string} dir 
+ * @param {string} uri 
+ */
+async function fetchQuest(dir, uri, addTitle=true) {
+  const id = uri.match(/([^/.]+)\.[^/.]+$/)[1];
+  let path = `${dir}/${id}`;
   let oldDom;
   if (await fileExists(`${path}/index-original.html`)) {
     oldDom = await JSDOM.fromFile(`${path}/index-original.html`);
@@ -75,9 +80,9 @@ async function fetchQuest(dir, uri, title=null) {
   doc.body.appendChild(titleEl);
 
   // move to output folder if none specified
-  if (!title) {
-    title = titleEl.textContent.trim();
-    const newPath = `${dir}/${title}`;
+  if (addTitle) {
+    const title = titleEl.textContent.trim();
+    const newPath = `${dir}/${title} [${id}]`;
     await fs.mkdir(newPath, { recursive: true });
     path = newPath;
   }
@@ -125,7 +130,11 @@ async function fetchQuest(dir, uri, title=null) {
 }
 
 async function main() {
-  await fetchQuest('_out', 'https://questden.org/kusaba/quest/res/1129477.html');
+  let questUri = 'https://questden.org/kusaba/quest/res/1129477.html';
+  if (process.argv.length > 2) {
+    questUri = process.argv[2];
+  }
+  await fetchQuest('_out', questUri);
 }
 
 main();

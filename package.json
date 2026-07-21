@@ -1,11 +1,11 @@
 {
   "name": "fetchquest",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "description": "a questden archiver for your static website",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "fetchquest": "node index.js",
+    "fetch-quest": "node fetch-quest.js",
     "serve": "serve _out"
   },
   "keywords": [],
