@@ -19,6 +19,27 @@ async function download(path, uri) {
   await fs.writeFile(path, res.body);
 }
 
+/**
+ * @argument {Document} doc 
+ * @argument {Element} el 
+ * */
+function repackPost(doc, el) {
+  imgUri = el.querySelector('a:has(img)')?.getAttribute('href');
+  imgName = imgUri?.split('/').at(-1);
+  const img = doc.createElement('img');
+  img.setAttribute('src', `res/${imgName}`);
+  img.setAttribute('alt', imgName);
+  const wrapper = doc.createElement('div');
+  wrapper.classList.add('img-wrapper');
+  wrapper.appendChild(img);
+  content = el.querySelector('blockquote');
+  const post = doc.createElement('div');
+  post.classList.add('post');
+  post.appendChild(wrapper);
+  post.appendChild(content);
+  return { imgUri, imgName, post };
+}
+
 async function fetchQuest(dir, uri, title=null) {
   let path = `${dir}/${title ?? '_tmp'}`;
   let oldDom;
@@ -62,31 +83,20 @@ async function fetchQuest(dir, uri, title=null) {
   await fs.mkdir(`${path}/res/`, { recursive: true });
   const pending = [];
   pending.push(fs.copyFile('style.css', `${path}/style.css`));
-  
-  const cover = doc.createElement('div');
-  cover.classList.add('post', 'cover');
-  const coverImgLink = oldDoc.querySelector('#delform a:has(img)').getAttribute('href');
-  const coverImgName = coverImgLink.split('/').at(-1);
-  pending.push(download(`${path}/res/${coverImgName}`, `https://questden.org${coverImgLink}`));
-  const coverImg = doc.createElement('img');
-  coverImg.setAttribute('src', `./res/${coverImgName}`);
-  coverImg.setAttribute('alt', coverImgName);
-  const coverImgWrapper = doc.createElement('div');
-  coverImgWrapper.classList.add('img-wrapper');
-  coverImgWrapper.appendChild(coverImg);
-  cover.appendChild(coverImgWrapper);
 
-  cover.appendChild(oldDoc.querySelector('#delform blockquote'));
-  doc.body.appendChild(cover);
+  const { imgUri, imgName, post } = repackPost(doc, oldDoc.querySelector('#delform'));
+  pending.push(download(`${path}/res/${imgName}`, `https://questden.org${imgUri}`));
+  post.classList.add('cover');
+  doc.body.appendChild(post);
 
   // extract image replies
   const replies = oldDoc.querySelectorAll('.reply');
   let breakAdded = true;
   for (const reply of replies) {
-    const imgLink = reply.querySelector('a:has(img)')?.getAttribute('href');
+    const { imgUri, imgName, post } = repackPost(doc, reply);
 
     // add a marker when an image post follows a non-image post.
-    if (!imgLink) {
+    if (!imgUri) {
       breakAdded = false;
       continue;
     }
@@ -96,20 +106,8 @@ async function fetchQuest(dir, uri, title=null) {
       doc.body.appendChild(breakDiv);
       breakAdded = true;
     }
-    
-    const imgName = imgLink.split('/').at(-1);
-    pending.push(download(`${path}/res/${imgName}`, `https://questden.org${imgLink}`));
 
-    const post = doc.createElement('div');
-    post.classList.add('post');
-    const img = doc.createElement('img');
-    img.setAttribute('src', `./res/${imgName}`);
-    img.setAttribute('alt', imgName);
-    const imgWrapper = doc.createElement('div');
-    imgWrapper.classList.add('img-wrapper');
-    imgWrapper.appendChild(img);
-    post.appendChild(imgWrapper);
-    post.appendChild(reply.querySelector('blockquote'));
+    pending.push(download(`${path}/res/${imgName}`, `https://questden.org${imgUri}`));
     doc.body.appendChild(post);
   }
 
