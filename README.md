@@ -20,3 +20,4 @@ npm run fetchquest
 - [ ] oh heck questden has spoiler markup? add support for that too.
 - [ ] install a dev server so you can test out the navigation while working on this
 - [ ] use the original filenames instead of the questden file ids, when possible
+- [ ] save extracted text and images in an intermediate json format for overrides
