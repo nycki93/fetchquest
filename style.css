@@ -22,3 +22,18 @@ img {
   display: block;
   margin: 1em auto;
 }
+
+/* ms paint adventures */
+h1, h2, .next {
+  font-family: consolas, monospace, sans-serif;
+  font-weight: bold;
+}
+h1 {
+  text-align: center;
+}
+h2 {
+  color: #CC1105;
+}
+.next {
+  font-size: xx-large;
+}
