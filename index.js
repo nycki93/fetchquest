@@ -1,13 +1,13 @@
 const fs = require('node:fs/promises');
+
+const prettier = require('prettier');
 const { JSDOM } = require('jsdom');
 
 async function fileExists(path) {
-  try {
-    await fs.access(path);
+  try { 
+    await fs.access(path) 
   } catch (err) {
-    if (err.code == 'ENOENT') {
-      return false;
-    }
+    if (err.code == 'ENOENT') return false;
     throw err;
   }
   return true;
@@ -24,15 +24,21 @@ async function download(path, uri) {
  * @argument {Element} el 
  * */
 function repackPost(doc, el) {
-  imgUri = el.querySelector('a:has(img)')?.getAttribute('href');
-  imgName = imgUri?.split('/').at(-1);
+  const imgUri = el.querySelector('a:has(img)')?.getAttribute('href');
+  const imgName = imgUri?.split('/').at(-1);
   const img = doc.createElement('img');
   img.setAttribute('src', `res/${imgName}`);
   img.setAttribute('alt', imgName);
   const wrapper = doc.createElement('div');
   wrapper.classList.add('img-wrapper');
   wrapper.appendChild(img);
-  content = el.querySelector('blockquote');
+
+  const content = el.querySelector('blockquote');
+  const leadingDiv = content.querySelector('div:first-child');
+  if (leadingDiv) {
+    content.removeChild(leadingDiv);
+  }
+  
   const post = doc.createElement('div');
   post.classList.add('post');
   post.appendChild(wrapper);
@@ -113,7 +119,9 @@ async function fetchQuest(dir, uri, title=null) {
   }
 
   await Promise.all(pending);
-  await fs.writeFile(`${path}/index.html`, dom.serialize());
+  let html = dom.serialize();
+  html = await prettier.format(html, { parser: 'html' });
+  await fs.writeFile(`${path}/index.html`, html);
 }
 
 async function main() {
