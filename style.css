@@ -1,21 +1,60 @@
 /* questden colors */
+html {
+  --body-bg: #FFFFEE;
+  --post-bg: #F0E0D6;
+  --post-text: #800000;
+  --title-text: #CC1105;
+  --quote-text: #789922;
+}
+
 body {
-  background: #FFFFEE;
+  color: var(--title-text);
+  background: var(--body-bg);
   max-width: 40em;
   margin: 1em auto;
 }
 
-section {
-  background: #F0E0D6;
-  color: #800000;
-  padding: 1em;
-  margin: 1rem auto;
+.filetitle {
+  display:block;
+  width: 100%;
+  text-align: center;
+  font-size: xx-large;
+  font-weight: bold;
 }
 
-img {
-  max-width: 100%;
+.post {
+  background: var(--post-bg);
+  color: var(--post-text);
+  padding: 1em;
+  margin: 1em auto;
+}
+.post blockquote {
+  margin: 0;
+}
+.unkfunc {
+  color: var(--quote-text);
+}
+
+.img-wrapper {
+  max-width: 500px;
   display: block;
   margin: 0 auto;
+}
+img {
+  width: 100%;
+  background-color: white;
+}
+
+/* spoiler tags */
+.spoiler {
+  color: black;
+  background-color: black;
+}
+.spoiler a:link, .spoiler a:visited {
+  color:black;
+}
+.spoiler:hover {
+  color: white;
 }
 
 /* ms paint adventures */
@@ -43,4 +82,9 @@ nav li {
 }
 nav li + li::before {
 	content: ' | ';
+}
+
+/* temporarily make post breaks visible */
+.post-break {
+  border-bottom: thick dashed;
 }
