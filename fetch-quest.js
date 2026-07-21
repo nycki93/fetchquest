@@ -127,6 +127,48 @@ async function fetchQuest(dir, uri, addTitle=true) {
   let html = dom.serialize();
   html = await prettier.format(html, { parser: 'html' });
   await fs.writeFile(`${path}/index.html`, html);
+  return path;
+}
+
+async function paginate(questDir) {
+  const mainDom = await JSDOM.fromFile(`${questDir}/index.html`);
+  
+  const clone = async () => {
+    let dom = await JSDOM.fromFile(`${questDir}/index.html`);
+    dom.window.document.body.innerHTML = '';
+    return dom;
+  }
+
+  const pages = [];
+  let nextPage = await clone();
+  for (const el of mainDom.window.document.body.children) {
+    if (el.classList.contains('post-break')) {
+      pages.push(nextPage);
+      nextPage = await clone();
+      continue;
+    }
+    nextPage.window.document.body.appendChild(el);
+  }
+  pages.push(nextPage);
+
+  for (let i = 0; i < pages.length; i += 1) {
+    
+    // move everything one directory deeper
+    for (const el of pages[i].window.document.querySelectorAll('img')) {
+      el.setAttribute('src', '../' + el.getAttribute('src'));
+    }
+    for (const el of pages[i].window.document.querySelectorAll('link[rel="stylesheet"')) {
+      console.log('fixing style tag');
+      el.setAttribute('href', '../' + el.getAttribute('href'));
+    }
+
+    let html = pages[i].serialize();
+    html = await prettier.format(html, { parser: 'html' });
+    const dir = `${questDir}/page-${i+1}/`
+    await fs.mkdir(dir)
+    console.log(`writing ${dir}`);
+    await fs.writeFile(`${dir}/index.html`, html);
+  }
 }
 
 async function main() {
@@ -134,7 +176,8 @@ async function main() {
   if (process.argv.length > 2) {
     questUri = process.argv[2];
   }
-  await fetchQuest('_out', questUri);
+  const questDir = await fetchQuest('_out', questUri);
+  await paginate(questDir);
 }
 
 main();
