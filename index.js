@@ -2,24 +2,39 @@ const fs = require('node:fs/promises');
 const { Readable } = require('node:stream');
 const jsdom = require('jsdom');
 
-async function fetchQuest(path, uri) {
+async function fileExists(path) {
   try {
     await fs.access(path);
   } catch (err) {
     if (err.code == 'ENOENT') {
-      // file does not exist, fetch it now
-      const res = await fetch(uri);
-      await fs.writeFile(path, Readable.fromWeb(res.body));
-    } else {
-      // unknown error, log it
-      console.log(err);
+      return false;
     }
+    throw err;
   }
+  return true;
+}
+
+async function fetchQuest(path, uri) {
+  if (!await fileExists(path)) {
+    const res = await fetch(uri);
+    await fs.writeFile(path, Readable.fromWeb(res.body));
+  }
+}
+
+async function fetchImages(path, posts) {
+  return Promise.all(posts.map(async (post) => {
+    const uri = post.imgSrc;
+    const name = uri.split('/').at(-1);
+    if (await fileExists(`${path}/${name}`)) return;
+    console.log(`fetching ${uri}`);
+    const res = await fetch(uri);
+    await fs.writeFile(`${path}/${name}`, res.body);
+  }));
 }
 
 function getCoverPage(dom) {
   const form = dom.window.document.querySelector('#delform');
-  const imgSrc = form.querySelector('a:has(img)').getAttribute('href');
+  const imgSrc = `https://questden.org/${form.querySelector('a:has(img)').getAttribute('href')}`;
   const title = form.querySelector('.filetitle').textContent.trim();
   const author = form.querySelector('.postername').textContent.trim();
   const desc = form.querySelector('blockquote').textContent.trim();
@@ -31,9 +46,9 @@ function * getPosts(dom) {
   let id = 1;
   for (const el of dom.window.document.querySelectorAll('.reply')) {
     const imgLink = el.querySelector('a:has(img)');
-    const imgSrc = imgLink && imgLink.getAttribute('href');
+    const imgSrc = imgLink && `https://questden.org${imgLink.getAttribute('href')}`;
     const desc = el.querySelector('blockquote').textContent.trim();
-    yield { imgSrc, desc, id };
+    yield { desc, id, imgSrc };
     id += 1;
   }
 }
@@ -85,8 +100,10 @@ async function main() {
   const dom = await jsdom.JSDOM.fromFile('_tmp/quest.html');
 
   let questTitle = '';
-  const imagePosts = Array.from(getPosts(dom)).filter(p => p.imgSrc);
-  for (let i = 0; i < 10; i += 1) { // temporarily limited to 2 pages
+  const imagePosts = Array.from(getPosts(dom)).filter(p => p.imgSrc).slice(0, 10);
+  await fetchImages('_out', imagePosts);
+
+  for (let i = 0; i < imagePosts.length; i += 1) {
     const { title, imgSrc, desc } = imagePosts[i];
     if (!imgSrc) continue;
     
@@ -100,7 +117,7 @@ async function main() {
       questTitle = title;
     }
   }
-  
+
   console.log('ok.');
   process.exit(0);
 }
