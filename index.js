@@ -40,6 +40,7 @@ function * getPosts(dom) {
 
 // TODO: set this up like the slime quest demo from nycki.net
 function pageHtml({ imgSrc, questTitle, title, desc, nextPage }) {
+  title = title ?? '==&gt;';
   const pageTitle = (questTitle) ? `${questTitle} | ${title}` : title;
 
   return `
@@ -54,14 +55,22 @@ function pageHtml({ imgSrc, questTitle, title, desc, nextPage }) {
     <body>
       <main>
         <h1>${title}</h1>
-        <img src="${imgSrc}">
-        <p>
-          ${desc}
-        </p>
-        ${nextPage && `
-          <a class="next" href="${nextPage}">==&gt;</a>
-        `}
+        <section>
+          <img src="${imgSrc}">
+          <p>
+            ${desc}
+          </p>
+        </section>
       </main>
+      ${nextPage && `
+        <span class="next">&gt; <a href="${nextPage}">==&gt;</a></span>
+      `}
+      <nav>
+        <ul>
+          <li><a href="../p0">Start Over</a></li>
+          <li><a href="../p0">Go Back</a></li>
+        </ul>
+      </nav>
     </body>
     </html>
   `;
@@ -77,7 +86,7 @@ async function main() {
 
   let questTitle = '';
   const imagePosts = Array.from(getPosts(dom)).filter(p => p.imgSrc);
-  for (let i = 0; i < 2; i += 1) { // temporarily limited to 2 pages
+  for (let i = 0; i < 10; i += 1) { // temporarily limited to 2 pages
     const { title, imgSrc, desc } = imagePosts[i];
     if (!imgSrc) continue;
     
