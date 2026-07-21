@@ -35,13 +35,14 @@ body {
   color: var(--quote-text);
 }
 
-img {
-  max-width: 100%;
-  width: 500px;
-  height: 500px;
-  background-color: white;
+.img-wrapper {
+  max-width: 500px;
   display: block;
   margin: 0 auto;
+}
+img {
+  width: 100%;
+  background-color: white;
 }
 
 /* spoiler tags */

@@ -21,6 +21,12 @@ async function fetchQuest(path, uri) {
   }
 }
 
+async function fetchImage(path, uri) {
+  if (await fileExists(path)) return;
+  const res = await fetch(uri);
+  await fs.writeFile(path, res.body);
+}
+
 async function fetchQuest2(path, uri) {
   let oldDom;
   if (await fileExists(`${path}/quest-raw.html`)) {
@@ -44,17 +50,27 @@ async function fetchQuest2(path, uri) {
   `);
   const doc = dom.window.document;
 
+  // download images as needed
+  await fs.mkdir(`${path}/res/`, { recursive: true });
+  const pending = [];
+
   // extract cover
   const cover = doc.createElement('div');
   doc.body.appendChild(oldDoc.querySelector('#delform .filetitle'));
   // doc.body.appendChild(oldDoc.querySelector('#delform .postername'));
   cover.classList.add('post', 'cover');
+  
   const coverImgLink = oldDoc.querySelector('#delform a:has(img)').getAttribute('href');
   const coverImgName = coverImgLink.split('/').at(-1);
+  pending.push(fetchImage(`${path}/res/${coverImgName}`, `https://questden.org${coverImgLink}`));
   const coverImg = doc.createElement('img');
-  coverImg.setAttribute('src', coverImgLink);
+  coverImg.setAttribute('src', `./res/${coverImgName}`);
   coverImg.setAttribute('alt', coverImgName);
-  cover.appendChild(coverImg);
+  const coverImgWrapper = doc.createElement('div');
+  coverImgWrapper.classList.add('img-wrapper');
+  coverImgWrapper.appendChild(coverImg);
+  cover.appendChild(coverImgWrapper);
+
   cover.appendChild(oldDoc.querySelector('#delform blockquote'));
   doc.body.appendChild(cover);
 
@@ -64,17 +80,21 @@ async function fetchQuest2(path, uri) {
     const imgLink = reply.querySelector('a:has(img)')?.getAttribute('href');
     if (!imgLink) continue;
     const imgName = imgLink.split('/').at(-1);
+    pending.push(fetchImage(`${path}/res/${imgName}`, `https://questden.org${imgLink}`));
 
     const post = doc.createElement('div');
     post.classList.add('post');
     const img = doc.createElement('img');
-    img.setAttribute('src', imgLink);
+    img.setAttribute('src', `./res/${imgName}`);
     img.setAttribute('alt', imgName);
-    post.appendChild(img);
+    const imgWrapper = doc.createElement('div');
+    imgWrapper.classList.add('img-wrapper');
+    imgWrapper.appendChild(img);
+    post.appendChild(imgWrapper);
     post.appendChild(reply.querySelector('blockquote'));
     doc.body.appendChild(post);
   }
-
+  await Promise.all(pending);
   await fs.writeFile(`${path}/quest2.html`, dom.serialize());
 }
 
