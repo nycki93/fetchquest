@@ -130,11 +130,15 @@ async function fetchQuest(dir, uri, addTitle=true) {
   return path;
 }
 
-async function paginate(questDir) {
-  const mainDom = await JSDOM.fromFile(`${questDir}/index.html`);
+async function paginate(questDir, questUri) {
+  const everything = `${questDir}/everything.html`;
+  if (!await fileExists(everything)) {
+    await fs.copyFile(`${questDir}/index.html`, everything);
+  }
+  const mainDom = await JSDOM.fromFile(everything);
   
   const clone = async () => {
-    let dom = await JSDOM.fromFile(`${questDir}/index.html`);
+    let dom = await JSDOM.fromFile(everything);
     dom.window.document.body.innerHTML = '';
     return dom;
   }
@@ -152,21 +156,48 @@ async function paginate(questDir) {
   pages.push(nextPage);
 
   for (let i = 0; i < pages.length; i += 1) {
-    
-    // move everything one directory deeper
-    for (const el of pages[i].window.document.querySelectorAll('img')) {
-      el.setAttribute('src', '../' + el.getAttribute('src'));
+    const doc = pages[i].window.document;
+
+    // move later pages into sub-folders
+    if (i > 0) {
+      for (const el of doc.querySelectorAll('img')) {
+        el.setAttribute('src', '../' + el.getAttribute('src'));
+      }
+      for (const el of doc.querySelectorAll('link[rel="stylesheet"')) {
+        el.setAttribute('href', '../' + el.getAttribute('href'));
+      }
     }
-    for (const el of pages[i].window.document.querySelectorAll('link[rel="stylesheet"')) {
-      console.log('fixing style tag');
-      el.setAttribute('href', '../' + el.getAttribute('href'));
-    }
+
+    // add nav links
+    const t = doc.createElement('template');
+    t.innerHTML = `
+      ${
+        (i == 0) ? `<span class="next">> <a href="page-2/">==&gt;</a></span>`
+        : (i < pages.length - 1) ? `<span class="next">> <a href="../page-${i+2}/">==&gt;</a></span>`
+        : ''
+      }
+      <nav>
+        <ul>
+          ${
+            (i == 0) ? `<li><a href=".">Start Over</a></li>`
+            : `<li><a href="../">Start Over</a></li>`
+          }
+          ${
+            (i == 0) ? ''
+            : (i == 1) ? `<li><a href="../">Go Back</a></li>`
+            : `<li><a href="../page-${i}">Go Back</a></li>`
+          }
+          <li><a href="${questUri}">Questden<a></li>
+        </ul>
+      </nav>
+    `;
+    doc.body.appendChild(t.content);
 
     let html = pages[i].serialize();
     html = await prettier.format(html, { parser: 'html' });
-    const dir = `${questDir}/page-${i+1}/`
-    await fs.mkdir(dir)
-    console.log(`writing ${dir}`);
+    let dir = (i == 0) ? questDir : `${questDir}/page-${i+1}`;
+    await fs.mkdir(dir, { recursive: true });
+    console.log(`writing ${dir}/`);
     await fs.writeFile(`${dir}/index.html`, html);
   }
 }
@@ -177,7 +208,7 @@ async function main() {
     questUri = process.argv[2];
   }
   const questDir = await fetchQuest('_out', questUri);
-  await paginate(questDir);
+  await paginate(questDir, questUri);
 }
 
 main();
