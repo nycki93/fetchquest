@@ -4,7 +4,7 @@ a questden archiver for your static website
 
 ## usage
 
-first time:
+first times:
 ```
 npm install
 ```
