@@ -15,6 +15,7 @@ async function fileExists(path) {
 
 async function download(path, uri) {
   if (await fileExists(path)) return;
+  console.log(`downloading ${uri}`);
   const res = await fetch(uri);
   await fs.writeFile(path, res.body);
 }
@@ -52,9 +53,12 @@ function repackPost(doc, el) {
  */
 async function fetchQuest(dir, uri, addTitle=true) {
   const id = uri.match(/([^/.]+)\.[^/.]+$/)[1];
+  console.log(`fetching quest ${id}`);
+
   let path = `${dir}/${id}`;
   let oldDom;
   if (await fileExists(`${path}/index-original.html`)) {
+    console.log(`reusing index-original.html`);
     oldDom = await JSDOM.fromFile(`${path}/index-original.html`);
   } else {
     oldDom = await JSDOM.fromURL(uri);
@@ -75,17 +79,24 @@ async function fetchQuest(dir, uri, addTitle=true) {
 
   const doc = dom.window.document;
   const titleEl = oldDoc.querySelector('#delform .filetitle');
-  // TODO: style author's name as subtitle
-  // doc.body.appendChild(oldDoc.querySelector('#delform .postername'));
   doc.body.appendChild(titleEl);
+  // TODO: style author's name as subtitle
+  const author = oldDoc.querySelector('#delform .postername').textContent.trim();
+  const authorEl = oldDoc.createElement('template');
+  authorEl.innerHTML = `
+    <span class="subtitle">by ${author}</span>
+  `;
+  doc.body.appendChild(authorEl.content);
 
   // move to output folder if none specified
+  let title = id;
   if (addTitle) {
-    const title = titleEl.textContent.trim();
-    const newPath = `${dir}/${title} [${id}]`;
-    await fs.mkdir(newPath, { recursive: true });
-    path = newPath;
+    title = `${titleEl.textContent.trim()} [${id}]`;
   }
+  const newPath = `${dir}/${title} [${id}]`;
+  await fs.mkdir(newPath, { recursive: true });
+  path = newPath;
+
   if (!await fileExists(`${path}/index-original.html`)) {
     await fs.writeFile(`${path}/index-original.html`, oldDom.serialize());
   }
@@ -132,8 +143,12 @@ async function fetchQuest(dir, uri, addTitle=true) {
 
 async function paginate(questDir, questUri) {
   const everything = `${questDir}/everything.html`;
-  if (!await fileExists(everything)) {
+  if (await fileExists(everything)) {
+    console.log('reusing everything.html');
+  } else {
+    console.log('combining posts into everything.html');
     await fs.copyFile(`${questDir}/index.html`, everything);
+
   }
   const mainDom = await JSDOM.fromFile(everything);
   
@@ -145,7 +160,7 @@ async function paginate(questDir, questUri) {
 
   const pages = [];
   let nextPage = await clone();
-  for (const el of mainDom.window.document.body.children) {
+  for (const el of mainDom.window.document.querySelectorAll('body > *')) {
     if (el.classList.contains('post-break')) {
       pages.push(nextPage);
       nextPage = await clone();
