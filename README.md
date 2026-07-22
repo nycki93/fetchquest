@@ -4,7 +4,20 @@ a questden archiver for your static website
 
 ## usage
 
+first time:
+```
+npm install
+```
+
+second tries:
+```
 npm run fetch-quest <url>
+```
+
+take a trip to the mountains:
+```
+npm run preview
+```
 
 ## todo
 
